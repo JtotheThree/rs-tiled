@@ -69,6 +69,49 @@ fn test_external_tileset() {
 }
 
 #[test]
+fn test_loading_world() {
+    let mut loader = Loader::new();
+
+    let e = loader.load_world("assets/world/world_basic.world").unwrap();
+
+    let maps = e.maps.unwrap();
+
+    assert_eq!(e.world_type.unwrap(), "world");
+    assert_eq!(maps[0].filename, "map01.tmx");
+    assert_eq!(maps[1].x, 960);
+    assert_eq!(maps[1].y, 0);
+    assert_eq!(maps[1].width, Some(960));
+    assert_eq!(maps[1].height, Some(640));
+    assert_eq!(maps.len(), 2);
+}
+
+#[test]
+fn test_loading_world_pattern() {
+    let mut loader = Loader::new();
+
+    let e = loader.load_world("assets/world/world_pattern.world").unwrap();
+
+    let maps = e.maps.unwrap();
+
+    assert_eq!(e.world_type.unwrap(), "world");
+    assert_eq!(maps[0].filename, "map-x01-y01-plains.tmx");
+    assert_eq!(maps[0].x, 880);
+    assert_eq!(maps[0].y, 240);
+    assert_eq!(maps[1].filename, "map-x00-y00-desert.tmx");
+}
+
+#[test]
+fn test_bad_loading_world_pattern() {
+    let mut loader = Loader::new();
+
+    let e = loader.load_world("assets/world/world_bad_pattern.world");
+    assert!(e.is_err());
+
+    let e = loader.load_world("assets/world/world_pattern_bad.world");
+    assert!(e.is_err());
+}
+
+#[test]
 fn test_cache() {
     let mut loader = Loader::new();
     let e = loader

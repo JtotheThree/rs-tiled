@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::{
     DefaultResourceCache, FilesystemResourceReader, Map, ResourceCache, ResourceReader, Result,
-    Tileset,
+    Tileset, World,
 };
 
 /// A type used for loading [`Map`]s and [`Tileset`]s.
@@ -180,6 +180,11 @@ impl<Cache: ResourceCache, Reader: ResourceReader> Loader<Cache, Reader> {
     /// in this context it is not an intermediate object.
     pub fn load_tsx_tileset(&mut self, path: impl AsRef<Path>) -> Result<Tileset> {
         crate::parse::xml::parse_tileset(path.as_ref(), &mut self.reader, &mut self.cache)
+    }
+
+    /// Parses a file hopefully containing a Tiled world and tries to parse it. All external files
+    pub fn load_world(&mut self, path: impl AsRef<Path>) -> Result<World> {
+        crate::world::parse_world(path.as_ref())
     }
 
     /// Returns a reference to the loader's internal [`ResourceCache`].

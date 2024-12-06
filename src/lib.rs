@@ -20,6 +20,7 @@ mod template;
 mod tile;
 mod tileset;
 mod util;
+mod world;
 
 pub use animation::*;
 pub use cache::*;
@@ -34,3 +35,4 @@ pub use reader::*;
 pub use template::*;
 pub use tile::*;
 pub use tileset::*;
+pub use world::*;

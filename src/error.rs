@@ -57,6 +57,8 @@ pub enum Error {
     CsvDecodingError(CsvDecodingError),
     /// An error occurred when parsing an XML file, such as a TMX or TSX file.
     XmlDecodingError(xml::reader::Error),
+    /// An error occurred when attempting to deserialize a JSON file.
+    JsonDecodingError(serde_json::Error),
     /// The XML stream ended before the document was fully parsed.
     PrematureEnd(String),
     /// The path given is invalid because it isn't contained in any folder.
@@ -120,6 +122,7 @@ impl fmt::Display for Error {
             Error::Base64DecodingError(e) => write!(fmt, "{}", e),
             Error::CsvDecodingError(e) => write!(fmt, "{}", e),
             Error::XmlDecodingError(e) => write!(fmt, "{}", e),
+            Error::JsonDecodingError(e) => write!(fmt, "{}", e),
             Error::PrematureEnd(e) => write!(fmt, "{}", e),
             Error::PathIsNotFile => {
                 write!(
