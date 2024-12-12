@@ -94,10 +94,10 @@ fn test_loading_world_pattern() {
     let maps = e.maps.unwrap();
 
     assert_eq!(e.world_type.unwrap(), "world");
-    assert_eq!(maps[0].filename, "map-x01-y01-plains.tmx");
+    assert_eq!(maps[0].filename, "map-x01-y01-empty.tmx");
     assert_eq!(maps[0].x, 880);
     assert_eq!(maps[0].y, 240);
-    assert_eq!(maps[1].filename, "map-x00-y00-desert.tmx");
+    assert_eq!(maps[1].filename, "map-x00-y00-empty.tmx");
 }
 
 #[test]

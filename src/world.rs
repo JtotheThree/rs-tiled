@@ -139,13 +139,6 @@ fn parse_world_pattern(path: &Path, patterns: &Vec<WorldPattern>) -> Result<Vec<
 
                 let captures = re.captures(&filename).unwrap();
 
-                // let captures =
-                //     re.captures(&filename)
-                //         .ok_or_else(|| Error::ResourceLoadingError {
-                //             path: path.to_owned(),
-                //             err: format!("Failed checking regex match on file {}", filename).into(),
-                //         })?;
-
                 let x = captures
                     .get(1)
                     .ok_or_else(|| Error::ResourceLoadingError {
