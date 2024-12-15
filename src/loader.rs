@@ -184,7 +184,7 @@ impl<Cache: ResourceCache, Reader: ResourceReader> Loader<Cache, Reader> {
 
     /// Parses a file hopefully containing a Tiled world and tries to parse it. All external files
     pub fn load_world(&mut self, path: impl AsRef<Path>) -> Result<World> {
-        crate::world::parse_world(path.as_ref())
+        crate::world::parse_world(path.as_ref(), &mut self.reader, &mut self.cache)
     }
 
     /// Returns a reference to the loader's internal [`ResourceCache`].

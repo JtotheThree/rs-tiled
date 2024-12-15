@@ -1,12 +1,11 @@
 use std::{
-    fs,
-    path::{Path, PathBuf},
+    fs, io::Read, path::{Path, PathBuf}
 };
 
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::Error;
+use crate::{Error, ResourceCache, ResourceReader};
 
 /// A World is a collection of maps and their layout in the game world.
 #[derive(Deserialize, PartialEq, Clone, Debug)]
@@ -74,8 +73,23 @@ struct WorldPattern {
 /// #    }
 /// # }
 /// ```
-pub(crate) fn parse_world(path: &Path) -> Result<World, Error> {
-    let world_file = match std::fs::read_to_string(path) {
+pub(crate) fn parse_world(
+    world_path: &Path,
+    reader: &mut impl ResourceReader,
+    cache: &mut impl ResourceCache,
+) -> Result<World, Error> {
+    let mut path = reader.read_from(&world_path).map_err(|err| Error::ResourceLoadingError {
+        path: world_path.to_owned(),
+        err: Box::new(err),
+    })?;
+
+    let mut world_string = String::new();
+    path.read_to_string(&mut world_string).map_err(|err| Error::ResourceLoadingError {
+        path: world_path.to_owned(),
+        err: Box::new(err),
+    })?;
+
+    /*let world_file = match std::fs::read_to_string(path) {
         Ok(world_file) => world_file,
         Err(err) => {
             return Err(Error::ResourceLoadingError {
@@ -83,9 +97,9 @@ pub(crate) fn parse_world(path: &Path) -> Result<World, Error> {
                 err: Box::new(err),
             })
         }
-    };
+    };*/
 
-    let mut world: World = match serde_json::from_str(&world_file) {
+    let mut world: World = match serde_json::from_str(&world_string) {
         Ok(world) => world,
         Err(err) => {
             return Err(Error::JsonDecodingError(err));
@@ -93,7 +107,7 @@ pub(crate) fn parse_world(path: &Path) -> Result<World, Error> {
     };
 
     if world.patterns.is_some() {
-        world.maps = match parse_world_pattern(path, &world.clone().patterns.unwrap()) {
+        world.maps = match parse_world_pattern(world_path, &world.clone().patterns.unwrap()) {
             Ok(maps) => Some(maps),
             Err(err) => return Err(err),
         };
