@@ -63,13 +63,16 @@ struct WorldPattern {
 /// Parse a Tiled World file from a path.
 /// If a the Patterns field is present, it will attempt to build the maps list based on the regex patterns.
 ///
+/// ## Parameters
+/// - `world_path`: The path to the world file.
+/// 
 /// ## Example
 /// ```
 /// # use tiled::Loader;
 /// #
 /// # fn main() {
-/// #    let loader = Loader::new();
-/// #    let world = loader.load_world("world.world").unwrap();
+/// #    let mut loader = Loader::new();
+/// #    let world = loader.load_world("assets/world/world_basic.world").unwrap();
 /// #    
 /// #    for map in world.maps.unwrap() {
 /// #        println!("Map: {:?}", map);
@@ -78,7 +81,6 @@ struct WorldPattern {
 /// ```
 pub(crate) fn parse_world(
     world_path: &Path,
-    load_maps: bool,
     reader: &mut impl ResourceReader,
     cache: &mut impl ResourceCache,
 ) -> Result<World, Error> {
@@ -105,15 +107,6 @@ pub(crate) fn parse_world(
             Ok(maps) => Some(maps),
             Err(err) => return Err(err),
         };
-    }
-
-    if load_maps {
-        if let Some(maps) = &mut world.maps {
-            for map in maps.iter_mut() {
-                let map_path = world_path.with_file_name(&map.filename);
-                map.map = Some(crate::parse::xml::parse_map(&map_path, reader, cache)?);
-            }
-        }
     }
 
     Ok(world)
