@@ -5,7 +5,7 @@ use std::{
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::{Error, ResourceCache, ResourceReader};
+use crate::{Error, Map, ResourceCache, ResourceReader};
 
 /// A World is a collection of maps and their layout in the game world.
 #[derive(Deserialize, PartialEq, Clone, Debug)]
@@ -28,6 +28,9 @@ pub struct WorldMap {
     /// The filename of the tmx map.
     #[serde(rename = "fileName")]
     pub filename: String,
+    /// Map Data
+    #[serde(skip_deserializing)]
+    pub map: Option<Map>,
     /// The x position of the map.
     pub x: i32,
     /// The y position of the map.
@@ -75,6 +78,7 @@ struct WorldPattern {
 /// ```
 pub(crate) fn parse_world(
     world_path: &Path,
+    load_maps: bool,
     reader: &mut impl ResourceReader,
     cache: &mut impl ResourceCache,
 ) -> Result<World, Error> {
@@ -89,16 +93,6 @@ pub(crate) fn parse_world(
         err: Box::new(err),
     })?;
 
-    /*let world_file = match std::fs::read_to_string(path) {
-        Ok(world_file) => world_file,
-        Err(err) => {
-            return Err(Error::ResourceLoadingError {
-                path: path.to_owned(),
-                err: Box::new(err),
-            })
-        }
-    };*/
-
     let mut world: World = match serde_json::from_str(&world_string) {
         Ok(world) => world,
         Err(err) => {
@@ -111,6 +105,15 @@ pub(crate) fn parse_world(
             Ok(maps) => Some(maps),
             Err(err) => return Err(err),
         };
+    }
+
+    if load_maps {
+        if let Some(maps) = &mut world.maps {
+            for map in maps.iter_mut() {
+                let map_path = world_path.with_file_name(&map.filename);
+                map.map = Some(crate::parse::xml::parse_map(&map_path, reader, cache)?);
+            }
+        }
     }
 
     Ok(world)
@@ -204,6 +207,7 @@ fn parse_world_pattern(path: &Path, patterns: &Vec<WorldPattern>) -> Result<Vec<
                 };
                 Ok(WorldMap {
                     filename,
+                    map: None,
                     x,
                     y,
                     width: Some(pattern.multiplier_x),
