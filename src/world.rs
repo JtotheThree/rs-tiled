@@ -28,9 +28,6 @@ pub struct WorldMap {
     /// The filename of the tmx map.
     #[serde(rename = "fileName")]
     pub filename: String,
-    /// Map Data
-    #[serde(skip_deserializing)]
-    pub map: Option<Map>,
     /// The x position of the map.
     pub x: i32,
     /// The y position of the map.
@@ -200,7 +197,6 @@ fn parse_world_pattern(path: &Path, patterns: &Vec<WorldPattern>) -> Result<Vec<
                 };
                 Ok(WorldMap {
                     filename,
-                    map: None,
                     x,
                     y,
                     width: Some(pattern.multiplier_x),
