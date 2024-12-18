@@ -1,7 +1,8 @@
 use std::path::Path;
 
 use crate::{
-    DefaultResourceCache, FilesystemResourceReader, Map, ResourceCache, ResourceReader, Result, Tileset
+    DefaultResourceCache, FilesystemResourceReader, Map, ResourceCache, ResourceReader, Result,
+    Tileset,
 };
 
 #[cfg(feature = "world")]
@@ -184,9 +185,14 @@ impl<Cache: ResourceCache, Reader: ResourceReader> Loader<Cache, Reader> {
         crate::parse::xml::parse_tileset(path.as_ref(), &mut self.reader, &mut self.cache)
     }
 
-    /// Parses a file hopefully containing a Tiled world and tries to parse it. All external files
-    /// will be loaded relative to the path given.
     #[cfg(feature = "world")]
+    /// Parses a file hopefully containing a Tiled world.
+    ///
+    /// The returned [`World`] provides the deserialized data from the world file. It does not load
+    /// any maps or tilesets.
+    /// ## Note
+    /// The ['WorldPattern`] struct provides [`WorldPattern::capture_path`] and [`WorldPattern::capture_paths`] 
+    /// as utility functions to test paths and return parsed [`WorldMap`]s.
     pub fn load_world(&mut self, path: impl AsRef<Path>) -> Result<World> {
         crate::world::parse_world(path.as_ref(), &mut self.reader)
     }

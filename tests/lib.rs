@@ -91,7 +91,9 @@ fn test_loading_world() {
 fn test_loading_world_pattern() {
     let mut loader = Loader::new();
 
-    let e = loader.load_world("assets/world/world_pattern.world").unwrap();
+    let e = loader
+        .load_world("assets/world/world_pattern.world")
+        .unwrap();
 
     assert_eq!(e.maps.is_none(), true);
 
@@ -99,12 +101,16 @@ fn test_loading_world_pattern() {
 
     assert_eq!(patterns.len(), 3);
 
-    let map1 = patterns[0].capture_path(&PathBuf::from("assets/world/map-x04-y04-plains.tmx")).unwrap();
+    let map1 = patterns[0]
+        .capture_path(&PathBuf::from("assets/world/map-x04-y04-plains.tmx"))
+        .unwrap();
     assert_eq!(map1.filename, "assets/world/map-x04-y04-plains.tmx");
     assert_eq!(map1.x, 2800);
     assert_eq!(map1.y, 1680);
 
-    let map2 = patterns[1].capture_path(&PathBuf::from("overworld-x02-y02.tmx")).unwrap();
+    let map2 = patterns[1]
+        .capture_path(&PathBuf::from("overworld-x02-y02.tmx"))
+        .unwrap();
     assert_eq!(map2.filename, "overworld-x02-y02.tmx");
 
     let unmatched_map = patterns[0].capture_path(&PathBuf::from("bad_map.tmx"));
