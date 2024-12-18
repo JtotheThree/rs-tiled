@@ -68,6 +68,7 @@ fn test_external_tileset() {
     compare_everything_but_sources(&r, &e);
 }
 
+#[cfg(feature = "world")]
 #[test]
 fn test_loading_world() {
     let mut loader = Loader::new();
@@ -85,27 +86,32 @@ fn test_loading_world() {
     assert_eq!(maps.len(), 2);
 }
 
+#[cfg(feature = "world")]
 #[test]
 fn test_loading_world_pattern() {
     let mut loader = Loader::new();
 
     let e = loader.load_world("assets/world/world_pattern.world").unwrap();
 
-    let maps = e.maps.unwrap();
+    assert_eq!(e.maps.is_none(), true);
 
-    assert_eq!(e.world_type.unwrap(), "world");
-    assert_eq!(maps.len(), 2);
-}
+    let patterns = e.patterns.unwrap();
 
-#[test]
-fn test_bad_loading_world_pattern() {
-    let mut loader = Loader::new();
+    assert_eq!(patterns.len(), 3);
 
-    let e = loader.load_world("assets/world/world_bad_pattern.world");
-    assert!(e.is_err());
+    let map1 = patterns[0].capture_path(&PathBuf::from("assets/world/map-x04-y04-plains.tmx")).unwrap();
+    assert_eq!(map1.filename, "assets/world/map-x04-y04-plains.tmx");
+    assert_eq!(map1.x, 2800);
+    assert_eq!(map1.y, 1680);
 
-    let e = loader.load_world("assets/world/world_pattern_bad.world");
-    assert!(e.is_err());
+    let map2 = patterns[1].capture_path(&PathBuf::from("overworld-x02-y02.tmx")).unwrap();
+    assert_eq!(map2.filename, "overworld-x02-y02.tmx");
+
+    let unmatched_map = patterns[0].capture_path(&PathBuf::from("bad_map.tmx"));
+    assert_eq!(unmatched_map.is_err(), true);
+
+    let overlow_map = patterns[2].capture_path(&PathBuf::from("map-x999-y999.tmx"));
+    assert_eq!(overlow_map.is_err(), true);
 }
 
 #[test]

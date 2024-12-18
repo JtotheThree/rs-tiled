@@ -6,6 +6,20 @@
             "multiplierY": 480,
             "offsetX": 240,
             "offsetY": -240
+        },
+        {
+            "regexp": "overworld-x0*(\\d+)-y0*(\\d+).tmx",
+            "multiplierX": 640,
+            "multiplierY": 480,
+            "offsetX": 4192,
+            "offsetY": 4192            
+        },
+        {
+            "regexp": "OVERFLOW-x0*(\\d+)-y0*(\\d+).tmx",
+            "multiplierX": 50000000,
+            "multiplierY": 50000000,
+            "offsetX": 4192,
+            "offsetY": 4192    
         }
     ],
     "type": "world"
