@@ -191,7 +191,7 @@ impl<Cache: ResourceCache, Reader: ResourceReader> Loader<Cache, Reader> {
     /// The returned [`World`] provides the deserialized data from the world file. It does not load
     /// any maps or tilesets.
     /// ## Note
-    /// The ['WorldPattern`] struct provides [`WorldPattern::capture_path`] and [`WorldPattern::capture_paths`] 
+    /// The ['WorldPattern`] struct provides [`WorldPattern::capture_path`] and [`WorldPattern::capture_paths`]
     /// as utility functions to test paths and return parsed [`WorldMap`]s.
     pub fn load_world(&mut self, path: impl AsRef<Path>) -> Result<World> {
         crate::world::parse_world(path.as_ref(), &mut self.reader)
