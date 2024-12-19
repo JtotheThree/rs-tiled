@@ -14,7 +14,7 @@ include = ["src/**/*.rs", "README.md", "LICENSE", "CHANGELOG.md"]
 [features]
 default = ["zstd"]
 wasm = ["zstd/wasm"]
-world = ["serde", "serde_json", "regex"]
+world = ["regex", "serde", "serde_json", "serde_regex"]
 
 [lib]
 name = "tiled"
