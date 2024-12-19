@@ -61,8 +61,13 @@ pub enum Error {
     /// An error occurred when attempting to deserialize a JSON file.
     JsonDecodingError(serde_json::Error),
     #[cfg(feature = "world")]
-    /// No regex captures were found.
-    CapturesNotFound,
+    /// Filename does not match any pattern in the world file.
+    NoMatchFound {
+        /// The filename that was not matched.
+        filename: String,
+    },
+    /// A parameter is out of range or results in arithmetic underflow or overflow.
+    RangeError(String),
     /// The XML stream ended before the document was fully parsed.
     PrematureEnd(String),
     /// The path given is invalid because it isn't contained in any folder.
@@ -129,7 +134,10 @@ impl fmt::Display for Error {
             #[cfg(feature = "world")]
             Error::JsonDecodingError(e) => write!(fmt, "{}", e),
             #[cfg(feature = "world")]
-            Error::CapturesNotFound => write!(fmt, "No captures found in pattern"),
+            Error::NoMatchFound { filename } => {
+                write!(fmt, "No match found for filename: '{}'", filename)
+            }
+            Error::RangeError(e) => write!(fmt, "Range error: {}", e),
             Error::PrematureEnd(e) => write!(fmt, "{}", e),
             Error::PathIsNotFile => {
                 write!(

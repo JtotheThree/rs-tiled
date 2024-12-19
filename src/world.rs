@@ -15,13 +15,80 @@ pub struct World {
     /// The path first used in a [`ResourceReader`] to load this world.
     #[serde(skip_deserializing)]
     pub source: PathBuf,
-    /// The [`WorldMap`]s defined in the world file.
+    /// The [`WorldMap`]s defined by the world file.
     pub maps: Option<Vec<WorldMap>>,
     /// Optional regex pattern to load maps.
     pub patterns: Option<Vec<WorldPattern>>,
-    /// The type of world, which is arbitrary and set by the user.
-    #[serde(rename = "type")]
-    pub world_type: Option<String>,
+}
+
+impl World {
+    /// Utility function to test a single filename against all defined patterns.
+    /// Returns a parsed [`WorldMap`] on the first matched pattern or an error if no patterns match.
+    pub fn match_filename(&self, filename: &str) -> Result<WorldMap, Error> {
+        // Tiled only tests tmx files that exist in the same directory as the world file.
+        // Supporting a proper path would misalign the crate with how tiled handles patterns.
+        if let Some(patterns) = &self.patterns {
+            for pattern in patterns {
+                let captures = match pattern.regexp.captures(filename) {
+                    Some(captures) => captures,
+                    None => continue,
+                };
+
+                let x = match captures.get(1) {
+                    Some(x) => x.as_str().parse::<i32>().unwrap(),
+                    None => continue,
+                };
+
+                let y = match captures.get(2) {
+                    Some(y) => y.as_str().parse::<i32>().unwrap(),
+                    None => continue,
+                };
+
+                // Calculate x and y positions based on the multiplier and offset.
+                let x = x
+                    .checked_mul(pattern.multiplier_x)
+                    .ok_or(Error::RangeError(
+                        "Capture x * multiplierX causes overflow".to_string(),
+                    ))?
+                    .checked_add(pattern.offset_x)
+                    .ok_or(Error::RangeError(
+                        "Capture x * multiplierX + offsetX causes overflow".to_string(),
+                    ))?;
+
+                let y = y
+                    .checked_mul(pattern.multiplier_y)
+                    .ok_or(Error::RangeError(
+                        "Capture y * multiplierY causes overflow".to_string(),
+                    ))?
+                    .checked_add(pattern.offset_y)
+                    .ok_or(Error::RangeError(
+                        "Capture y * multiplierY + offsetY causes overflow".to_string(),
+                    ))?;
+
+                // Returning the first matched pattern aligns with how Tiled handles patterns.
+                return Ok(WorldMap {
+                    filename: filename.to_owned(),
+                    x,
+                    y,
+                    width: None,
+                    height: None,
+                });
+            }
+        }
+
+        Err(Error::NoMatchFound {
+            filename: filename.to_string(),
+        })
+    }
+
+    /// Utility function to test a vec of filenames against all defined patterns.
+    /// Returns a vec of results with the parsed [`WorldMap`]s if it matches the pattern.
+    pub fn match_filenames(&self, filenames: &Vec<&str>) -> Vec<Result<WorldMap, Error>> {
+        filenames
+            .into_iter()
+            .map(|filename| self.match_filename(filename))
+            .collect()
+    }
 }
 
 /// A WorldMap provides the information for a map in the world and its layout.
@@ -35,89 +102,36 @@ pub struct WorldMap {
     /// The y position of the map.
     pub y: i32,
     /// The optional width of the map.
-    pub width: Option<u32>,
+    pub width: Option<i32>,
     /// The optional height of the map.
-    pub height: Option<u32>,
+    pub height: Option<i32>,
 }
 
 /// A WorldPattern defines a regex pattern to automatically determine which maps to load and how to lay them out.
-#[derive(Deserialize, PartialEq, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct WorldPattern {
-    /// The regex pattern to match against filenames. The first two capture groups should be the x integer and y integer positions.
-    pub regexp: String,
+    /// The regex pattern to match against filenames.
+    /// The first two capture groups should be the x integer and y integer positions.
+    #[serde(with = "serde_regex")]
+    pub regexp: Regex,
     /// The multiplier for the x position.
-    #[serde(rename = "multiplierX")]
-    pub multiplier_x: u32,
+    pub multiplier_x: i32,
     /// The multiplier for the y position.
-    #[serde(rename = "multiplierY")]
-    pub multiplier_y: u32,
+    pub multiplier_y: i32,
     /// The offset for the x position.
-    #[serde(rename = "offsetX")]
     pub offset_x: i32,
     /// The offset for the y position.
-    #[serde(rename = "offsetY")]
     pub offset_y: i32,
 }
 
-impl WorldPattern {
-    /// Utility function to test a single path against the defined regexp field and returns a parsed WorldMap if it matches.
-    /// Returns none if the filename does not match the pattern.
-    pub fn capture_path(&self, path: &Path) -> Result<WorldMap, Error> {
-        let re = Regex::new(&self.regexp).unwrap();
-        let captures = re
-            .captures(path.to_str().unwrap())
-            .ok_or(Error::CapturesNotFound)?;
-
-        let x = captures
-            .get(1)
-            .ok_or(Error::CapturesNotFound)?
-            .as_str()
-            .parse::<i32>()
-            .unwrap();
-        let y = captures
-            .get(2)
-            .ok_or(Error::CapturesNotFound)?
-            .as_str()
-            .parse::<i32>()
-            .unwrap();
-
-        // Calculate x and y positions based on the multiplier and offset.
-        let x = x
-            .checked_mul(self.multiplier_x as i32)
-            .ok_or(Error::InvalidPropertyValue {
-                description: "multiplierX causes overflow".to_string(),
-            })?
-            .checked_add(self.offset_x)
-            .ok_or(Error::InvalidPropertyValue {
-                description: "offsetX causes overflow".to_string(),
-            })?;
-
-        let y = y
-            .checked_mul(self.multiplier_y as i32)
-            .ok_or(Error::InvalidPropertyValue {
-                description: "multiplierY causes overflow".to_string(),
-            })?
-            .checked_add(self.offset_y)
-            .ok_or(Error::InvalidPropertyValue {
-                description: "offsetY causes overflow".to_string(),
-            })?;
-
-        Ok(WorldMap {
-            filename: path.to_str().unwrap().to_owned(),
-            x,
-            y,
-            width: None,
-            height: None,
-        })
-    }
-
-    /// Utility function to test a list of paths against the defined regexp field.
-    /// Returns a parsed list of WorldMaps from any matched filenames.
-    pub fn capture_paths(&self, paths: Vec<PathBuf>) -> Result<Vec<WorldMap>, Error> {
-        paths
-            .iter()
-            .map(|path| self.capture_path(path.as_path()))
-            .collect::<Result<Vec<_>, _>>()
+impl PartialEq for WorldPattern {
+    fn eq(&self, other: &Self) -> bool {
+        self.multiplier_x == other.multiplier_x
+            && self.multiplier_y == other.multiplier_y
+            && self.offset_x == other.offset_x
+            && self.offset_y == other.offset_y
+            && self.regexp.to_string() == other.regexp.to_string()
     }
 }
 
@@ -139,12 +153,8 @@ pub(crate) fn parse_world(
             err: Box::new(err),
         })?;
 
-    let world: World = match serde_json::from_str(&world_string) {
-        Ok(world) => world,
-        Err(err) => {
-            return Err(Error::JsonDecodingError(err));
-        }
-    };
+    let world: World =
+        serde_json::from_str(&world_string).map_err(|err| Error::JsonDecodingError(err))?;
 
     Ok(world)
 }

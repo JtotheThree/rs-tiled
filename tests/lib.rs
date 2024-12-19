@@ -77,7 +77,6 @@ fn test_loading_world() {
 
     let maps = e.maps.unwrap();
 
-    assert_eq!(e.world_type.unwrap(), "world");
     assert_eq!(maps[0].filename, "map01.tmx");
     assert_eq!(maps[1].x, 960);
     assert_eq!(maps[1].y, 0);
@@ -97,27 +96,32 @@ fn test_loading_world_pattern() {
 
     assert_eq!(e.maps.is_none(), true);
 
-    let patterns = e.patterns.unwrap();
-
+    let patterns = e.patterns.as_ref().unwrap();
     assert_eq!(patterns.len(), 3);
 
-    let map1 = patterns[0]
-        .capture_path(&PathBuf::from("assets/world/map-x04-y04-plains.tmx"))
-        .unwrap();
-    assert_eq!(map1.filename, "assets/world/map-x04-y04-plains.tmx");
+    let map1 = e.match_filename("map-x04-y04-plains.tmx").unwrap();
+
+    assert_eq!(map1.filename, "map-x04-y04-plains.tmx");
     assert_eq!(map1.x, 2800);
     assert_eq!(map1.y, 1680);
 
-    let map2 = patterns[1]
-        .capture_path(&PathBuf::from("overworld-x02-y02.tmx"))
-        .unwrap();
+    let map2 = e.match_filename("overworld-x02-y02.tmx").unwrap();
+
     assert_eq!(map2.filename, "overworld-x02-y02.tmx");
 
-    let unmatched_map = patterns[0].capture_path(&PathBuf::from("bad_map.tmx"));
-    assert_eq!(unmatched_map.is_err(), true);
+    let filenames = vec!["bad_map.tmx", "OVERFLOW-x099-y099.tmx"];
 
-    let overlow_map = patterns[2].capture_path(&PathBuf::from("map-x999-y999.tmx"));
-    assert_eq!(overlow_map.is_err(), true);
+    let errors = vec![
+        "No match found for filename: 'bad_map.tmx'",
+        "Range error: Capture x * multiplierX causes overflow",
+    ];
+
+    let matches = e.match_filenames(&filenames);
+
+    for (index, result) in matches.iter().enumerate() {
+        assert_eq!(result.is_err(), true);
+        assert_eq!(result.as_ref().err().unwrap().to_string(), errors[index]);
+    }
 }
 
 #[test]
