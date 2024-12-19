@@ -22,14 +22,12 @@ pub struct World {
 }
 
 impl World {
-    /// Utility function to test a single filename against all defined patterns.
+    /// Utility function to test a single path against all defined patterns.
     /// Returns a parsed [`WorldMap`] on the first matched pattern or an error if no patterns match.
-    pub fn match_filename(&self, filename: &str) -> Result<WorldMap, Error> {
-        // Tiled only tests tmx files that exist in the same directory as the world file.
-        // Supporting a proper path would misalign the crate with how tiled handles patterns.
+    pub fn match_path(&self, path: impl AsRef<Path>) -> Result<WorldMap, Error> {
         if let Some(patterns) = &self.patterns {
             for pattern in patterns {
-                let captures = match pattern.regexp.captures(filename) {
+                let captures = match pattern.regexp.captures(path.as_ref().to_str().unwrap()) {
                     Some(captures) => captures,
                     None => continue,
                 };
@@ -67,7 +65,7 @@ impl World {
 
                 // Returning the first matched pattern aligns with how Tiled handles patterns.
                 return Ok(WorldMap {
-                    filename: filename.to_owned(),
+                    filename: path.as_ref().to_str().unwrap().to_string(),
                     x,
                     y,
                     width: None,
@@ -77,16 +75,16 @@ impl World {
         }
 
         Err(Error::NoMatchFound {
-            filename: filename.to_string(),
+            path: path.as_ref().to_owned(),
         })
     }
 
     /// Utility function to test a vec of filenames against all defined patterns.
     /// Returns a vec of results with the parsed [`WorldMap`]s if it matches the pattern.
-    pub fn match_filenames(&self, filenames: &Vec<&str>) -> Vec<Result<WorldMap, Error>> {
-        filenames
+    pub fn match_paths<P: AsRef<Path>>(&self, paths: &[P]) -> Vec<Result<WorldMap, Error>> {
+        paths
             .into_iter()
-            .map(|filename| self.match_filename(filename))
+            .map(|path| self.match_path(path))
             .collect()
     }
 }

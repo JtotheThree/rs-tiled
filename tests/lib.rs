@@ -99,24 +99,28 @@ fn test_loading_world_pattern() {
     let patterns = e.patterns.as_ref().unwrap();
     assert_eq!(patterns.len(), 3);
 
-    let map1 = e.match_filename("map-x04-y04-plains.tmx").unwrap();
+    let map1 = e.match_path("map-x04-y04-plains.tmx").unwrap();
 
     assert_eq!(map1.filename, "map-x04-y04-plains.tmx");
     assert_eq!(map1.x, 2800);
     assert_eq!(map1.y, 1680);
 
-    let map2 = e.match_filename("overworld-x02-y02.tmx").unwrap();
+    let map2 = e
+        .match_path(PathBuf::from("assets/overworld-x02-y02.tmx"))
+        .unwrap();
 
-    assert_eq!(map2.filename, "overworld-x02-y02.tmx");
+    assert_eq!(map2.filename, "assets/overworld-x02-y02.tmx");
+    // Test to determine if we correctly hit the second pattern
+    assert_eq!(map2.x, 5472);
 
-    let filenames = vec!["bad_map.tmx", "OVERFLOW-x099-y099.tmx"];
+    let paths = vec!["bad_map.tmx", "OVERFLOW-x099-y099.tmx"];
 
     let errors = vec![
-        "No match found for filename: 'bad_map.tmx'",
+        "No match found for path: 'bad_map.tmx'",
         "Range error: Capture x * multiplierX causes overflow",
     ];
 
-    let matches = e.match_filenames(&filenames);
+    let matches = e.match_paths(&paths);
 
     for (index, result) in matches.iter().enumerate() {
         assert_eq!(result.is_err(), true);
