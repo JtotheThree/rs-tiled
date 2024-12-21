@@ -25,9 +25,11 @@ impl World {
     /// Utility function to test a single path against all defined patterns.
     /// Returns a parsed [`WorldMap`] on the first matched pattern or an error if no patterns match.
     pub fn match_path(&self, path: impl AsRef<Path>) -> Result<WorldMap, Error> {
+        let path_str = path.as_ref().to_str().expect("obtaining valid UTF-8 path");
+
         if let Some(patterns) = &self.patterns {
             for pattern in patterns {
-                match pattern.match_path(path.as_ref()) {
+                match pattern.match_path(path_str) {
                     Ok(world_map) => return Ok(world_map),
                     // We ignore matches here as the path may be matched by another pattern.
                     Err(Error::NoMatchFound { .. }) => continue,
@@ -99,7 +101,9 @@ impl WorldPattern {
     /// Utility function to test a path against this pattern.
     /// Returns a parsed [`WorldMap`] on the first matched pattern or an error if no patterns match.
     pub fn match_path(&self, path: impl AsRef<Path>) -> Result<WorldMap, Error> {
-        let captures = match self.regexp.captures(path.as_ref().to_str().unwrap()) {
+        let path_str = path.as_ref().to_str().expect("obtaining valid UTF-8 path");
+
+        let captures = match self.regexp.captures(path_str) {
             Some(captures) => captures,
             None => {
                 return Err(Error::NoMatchFound {
@@ -148,7 +152,7 @@ impl WorldPattern {
             ))?;
 
         Ok(WorldMap {
-            filename: path.as_ref().to_str().unwrap().to_string(),
+            filename: path_str.to_string(),
             x,
             y,
             width: None,
