@@ -64,7 +64,7 @@ pub enum Error {
     /// Filename does not match any pattern in the world file.
     NoMatchFound {
         /// The filename that was not matched.
-        path: PathBuf,
+        path: String,
     },
     /// A parameter is out of range or results in arithmetic underflow or overflow.
     RangeError(String),
@@ -135,7 +135,7 @@ impl fmt::Display for Error {
             Error::JsonDecodingError(e) => write!(fmt, "{}", e),
             #[cfg(feature = "world")]
             Error::NoMatchFound { path } => {
-                write!(fmt, "No match found for path: '{}'", path.to_string_lossy())
+                write!(fmt, "No match found for path: '{}'", path)
             }
             Error::RangeError(e) => write!(fmt, "Range error: {}", e),
             Error::PrematureEnd(e) => write!(fmt, "{}", e),

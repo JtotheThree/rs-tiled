@@ -29,9 +29,9 @@ impl World {
 
         if let Some(patterns) = &self.patterns {
             for pattern in patterns {
-                match pattern.match_path(path_str) {
+                match pattern.match_path_impl(path_str) {
                     Ok(world_map) => return Ok(world_map),
-                    // We ignore matches here as the path may be matched by another pattern.
+                    // We ignore match errors here as the path may be matched by another pattern.
                     Err(Error::NoMatchFound { .. }) => continue,
                     Err(err) => return Err(err),
                 }
@@ -39,7 +39,7 @@ impl World {
         }
 
         Err(Error::NoMatchFound {
-            path: path.as_ref().to_owned(),
+            path: path_str.to_owned(),
         })
     }
 
@@ -103,11 +103,15 @@ impl WorldPattern {
     pub fn match_path(&self, path: impl AsRef<Path>) -> Result<WorldMap, Error> {
         let path_str = path.as_ref().to_str().expect("obtaining valid UTF-8 path");
 
-        let captures = match self.regexp.captures(path_str) {
+        self.match_path_impl(path_str)
+    }
+
+    pub(crate) fn match_path_impl(&self, path: &str) -> Result<WorldMap, Error> {
+        let captures = match self.regexp.captures(path) {
             Some(captures) => captures,
             None => {
                 return Err(Error::NoMatchFound {
-                    path: path.as_ref().to_owned(),
+                    path: path.to_owned(),
                 })
             }
         };
@@ -116,7 +120,7 @@ impl WorldPattern {
             Some(x) => x.as_str().parse::<i32>().unwrap(),
             None => {
                 return Err(Error::NoMatchFound {
-                    path: path.as_ref().to_owned(),
+                    path: path.to_owned(),
                 })
             }
         };
@@ -125,7 +129,7 @@ impl WorldPattern {
             Some(y) => y.as_str().parse::<i32>().unwrap(),
             None => {
                 return Err(Error::NoMatchFound {
-                    path: path.as_ref().to_owned(),
+                    path: path.to_owned(),
                 })
             }
         };
@@ -152,7 +156,7 @@ impl WorldPattern {
             ))?;
 
         Ok(WorldMap {
-            filename: path_str.to_string(),
+            filename: path.to_owned(),
             x,
             y,
             width: None,
