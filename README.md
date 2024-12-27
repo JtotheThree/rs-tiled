@@ -52,7 +52,7 @@ let mut loader = Loader::with_reader(
     // Doing this embedding is useful for places where the OS filesystem is not available (e.g. WASM applications).
     |path: &std::path::Path| -> std::io::Result<_> {
         if path == std::path::Path::new("/my-map.tmx") {
-            Ok(std::io::Cursor::new(include_bytes!("assets/tiled_csv.tmx")))
+            Ok(std::io::Cursor::new(include_bytes!("../assets/tiled_csv.tmx")))
         } else {
             Err(std::io::ErrorKind::NotFound.into())
         }
@@ -86,7 +86,7 @@ impl tiled::ResourceReader for MyReader {
     // really dumb example implementation that just keeps resources in memory
     fn read_from(&mut self, path: &std::path::Path) -> std::result::Result<Self::Resource, Self::Error> {
         if path == std::path::Path::new("my_map.tmx") {
-            Ok(Cursor::new(include_bytes!("assets/tiled_xml.tmx")))
+            Ok(Cursor::new(include_bytes!("../assets/tiled_xml.tmx")))
         } else {
             Err(std::io::Error::new(std::io::ErrorKind::NotFound, "file not found"))
         }
