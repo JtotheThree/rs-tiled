@@ -16,9 +16,11 @@ pub struct World {
     #[serde(skip_deserializing)]
     pub source: PathBuf,
     /// The [`WorldMap`]s defined by the world file.
-    pub maps: Option<Vec<WorldMap>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub maps: Vec<WorldMap>,
     /// Optional regex pattern to load maps.
-    pub patterns: Option<Vec<WorldPattern>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub patterns: Vec<WorldPattern>,
 }
 
 impl World {
@@ -27,14 +29,12 @@ impl World {
     pub fn match_path(&self, path: impl AsRef<Path>) -> Result<WorldMap, Error> {
         let path_str = path.as_ref().to_str().expect("obtaining valid UTF-8 path");
 
-        if let Some(patterns) = &self.patterns {
-            for pattern in patterns {
-                match pattern.match_path_impl(path_str) {
-                    Ok(world_map) => return Ok(world_map),
-                    // We ignore match errors here as the path may be matched by another pattern.
-                    Err(Error::NoMatchFound { .. }) => continue,
-                    Err(err) => return Err(err),
-                }
+        for pattern in self.patterns.iter() {
+            match pattern.match_path_impl(path_str) {
+                Ok(world_map) => return Ok(world_map),
+                // We ignore match errors here as the path may be matched by another pattern.
+                Err(Error::NoMatchFound { .. }) => continue,
+                Err(err) => return Err(err),
             }
         }
 

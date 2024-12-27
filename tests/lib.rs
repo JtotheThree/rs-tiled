@@ -70,34 +70,31 @@ fn test_external_tileset() {
 
 #[cfg(feature = "world")]
 #[test]
-fn test_loading_world() {
+fn test_world() {
     let mut loader = Loader::new();
 
     let e = loader.load_world("assets/world/world_basic.world").unwrap();
 
-    let maps = e.maps.unwrap();
-
-    assert_eq!(maps[0].filename, "map01.tmx");
-    assert_eq!(maps[1].x, 960);
-    assert_eq!(maps[1].y, 0);
-    assert_eq!(maps[1].width, Some(960));
-    assert_eq!(maps[1].height, Some(640));
-    assert_eq!(maps.len(), 2);
+    assert_eq!(e.maps[0].filename, "map01.tmx");
+    assert_eq!(e.maps[1].x, 960);
+    assert_eq!(e.maps[1].y, 0);
+    assert_eq!(e.maps[1].width, Some(960));
+    assert_eq!(e.maps[1].height, Some(640));
+    assert_eq!(e.maps.len(), 2);
 }
 
 #[cfg(feature = "world")]
 #[test]
-fn test_loading_world_pattern() {
+fn test_world_pattern() {
     let mut loader = Loader::new();
 
     let e = loader
         .load_world("assets/world/world_pattern.world")
         .unwrap();
 
-    assert_eq!(e.maps.is_none(), true);
+    assert_eq!(e.maps.len(), 0);
 
-    let patterns = e.patterns.as_ref().unwrap();
-    assert_eq!(patterns.len(), 3);
+    assert_eq!(e.patterns.len(), 3);
 
     let map1 = e.match_path("map-x04-y04-plains.tmx").unwrap();
 
