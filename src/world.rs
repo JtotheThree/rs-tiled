@@ -183,8 +183,10 @@ pub(crate) fn parse_world(
             err: Box::new(err),
         })?;
 
-    let world: World =
+    let mut world: World =
         serde_json::from_str(&world_string).map_err(|err| Error::JsonDecodingError(err))?;
+
+    world.source = world_path.to_owned();
 
     Ok(world)
 }

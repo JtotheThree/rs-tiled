@@ -92,8 +92,8 @@ fn test_world_pattern() {
         .load_world("assets/world/world_pattern.world")
         .unwrap();
 
+    assert_eq!(e.source, PathBuf::from("assets/world/world_pattern.world"));
     assert_eq!(e.maps.len(), 0);
-
     assert_eq!(e.patterns.len(), 3);
 
     let map1 = e.match_path("map-x04-y04-plains.tmx").unwrap();
